@@ -5,4 +5,8 @@ pydantic==2.12.3
 streamlit==1.51.0
 tensorflow==2.20.0
 uvicorn==0.38.0
-scikit-learn
+scikit-learn==1.5.2
+
+# --- Visualización para métricas y gráficos ---
+matplotlib==3.9.2
+seaborn==0.13.2
