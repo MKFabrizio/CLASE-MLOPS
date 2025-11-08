@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import accuracy_score, classification_report, mean_absolute_error, mean_squared_error, confusion_matrix
-
+from pathlib import Path
 
 import re
 import pickle
@@ -22,4 +22,4 @@ df['Comentarios'] = df['Comentarios'].apply(lambda x: x.lower())
 df['Comentarios'] = df['Comentarios'].apply(lambda x: re.sub(r'[^a-zA-z0-9\s]', '', x))
 
 
-df.head()
+print(df.head())
