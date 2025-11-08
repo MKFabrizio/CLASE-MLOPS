@@ -1,0 +1,98 @@
+name: model-training
+on: [push]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Necesario para poder hacer push al repo
+
+    steps:
+      # --- 1️⃣ Clona el repositorio ---
+      - uses: actions/checkout@v3
+
+      # --- 2️⃣ Configura Python ---
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # --- 3️⃣ Instala CML (opcional para comentarios) ---
+      - uses: iterative/setup-cml@v1
+
+      # --- 4️⃣ Entrena modelo y genera métricas + gráficos ---
+      - name: Train model and update README
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🚀 Instalando dependencias..."
+          pip install -r requirements.txt
+
+          echo "📘 Ejecutando entrenamiento..."
+          python train.py
+
+          echo "📊 Generando gráficos..."
+          python - <<'EOF'
+          import pandas as pd
+          import matplotlib.pyplot as plt
+          import seaborn as sns
+          import re
+
+          # Leer el metrics.txt generado
+          with open("metrics.txt", "r", encoding="utf-8") as f:
+              text = f.read()
+
+          lines = re.findall(r"([A-Za-zÁÉÍÓÚÜÑñ\s]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+(\d+)", text)
+          if not lines:
+              print("⚠️ No se encontraron métricas por clase.")
+          else:
+              df = pd.DataFrame(lines, columns=["Label", "Precision", "Recall", "F1", "Support"])
+              df[["Precision","Recall","F1"]] = df[["Precision","Recall","F1"]].astype(float)
+              df = df[~df["Label"].str.contains("avg|accuracy|Confusion", case=False)]
+              sns.set(style="whitegrid", font_scale=1)
+              palette = ["#0078D4", "#742774", "#FFB900"]
+
+              # F1-score
+              plt.figure(figsize=(7,4))
+              sns.barplot(x="Label", y="F1", data=df, palette=palette)
+              plt.title("Comparación de F1-score por categoría", fontsize=13, fontweight="bold")
+              plt.ylim(0, 1)
+              for i,v in enumerate(df["F1"]):
+                  plt.text(i, v+0.02, f"{v:.2f}", ha="center", fontsize=9)
+              plt.tight_layout()
+              plt.savefig("plot_f1.png", dpi=200)
+
+              # Precision y Recall
+              plt.figure(figsize=(7,4))
+              df_m = df.melt(id_vars="Label", value_vars=["Precision","Recall"], var_name="Métrica", value_name="Valor")
+              sns.barplot(x="Label", y="Valor", hue="Métrica", data=df_m, palette=["#0078D4","#742774"])
+              plt.title("Comparación de Precision y Recall por categoría", fontsize=13, fontweight="bold")
+              plt.ylim(0, 1)
+              plt.legend(title="")
+              plt.tight_layout()
+              plt.savefig("plot_pr.png", dpi=200)
+              print("✅ Gráficos generados: plot_f1.png y plot_pr.png")
+          EOF
+
+          echo "📝 Actualizando README.md con los resultados..."
+          echo "## 📈 Resultados de Entrenamiento" > report.md
+          cat metrics.txt >> report.md
+          echo "" >> report.md
+          echo "### 🔹 Desempeño visual" >> report.md
+          echo "![](./plot_f1.png)" >> report.md
+          echo "" >> report.md
+          echo "![](./plot_pr.png)" >> report.md
+
+          # Si existe README, lo combina al final
+          if [ -f README.md ]; then
+            echo "\n\n---\n\n" >> README.md
+            cat report.md >> README.md
+          else
+            cp report.md README.md
+          fi
+
+          echo "📤 Commit y push de resultados..."
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add README.md plot_f1.png plot_pr.png metrics.txt
+          git commit -m "📈 Actualización automática de métricas y gráficos"
+          git push
