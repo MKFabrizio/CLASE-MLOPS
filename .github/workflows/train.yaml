@@ -16,4 +16,7 @@ jobs:
 
           cat metrics.txt >> report.md
           echo "![](./plot.png)" >> report.md
+          echo "" >> report.md
+          echo "## Matriz de Confusión" >> report.md
+          echo "![](./confusion_matrix.png)" >> report.md
           cml comment create report.md
