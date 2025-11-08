@@ -14,7 +14,10 @@ import re
 import pickle
 
 DATA_PATH = Path(__file__).resolve().parent / "data" / "base_encuestados_v2.csv"
-df = pd.read_csv(DATA_PATH)     
+df = pd.read_csv(DATA_PATH)  
+
+# sample 1000 rows
+df = df.sample(n=1000, random_state=42)
 
 df = df[['Comentarios','NPS']].dropna().copy()
 df['Comentarios'] = df['Comentarios'].apply(lambda x: x.lower())
