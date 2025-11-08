@@ -14,7 +14,7 @@ import re
 import pickle
 
 
-df = pd.read_csv(r'D:\UNI\CLASE MLOPS\data\base_encuestados_v2.csv')
+df = pd.read_csv(r'data\base_encuestados_v2.csv')
 
 
 df = df[['Comentarios','NPS']].dropna().copy()
