@@ -1,0 +1,41 @@
+name: model-training
+on: [push]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - uses: iterative/setup-cml@v1
+
+      - name: Train model
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install -r requirements.txt
+          python train.py
+
+          echo "# Resultados del entrenamiento" > report.md
+          echo "" >> report.md
+          cat metrics.txt >> report.md
+          echo "" >> report.md
+          echo "## Accuracy plot" >> report.md
+          echo "![](./accuracy.png)" >> report.md
+          echo "" >> report.md
+          echo "## Matriz de confusión" >> report.md
+          echo "![](./confusion_matrix.png)" >> report.md
+
+          cml comment create report.md
+
+      - name: Commit accuracy plot
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p reports
+          cp accuracy.png reports/accuracy.png
+          git add reports/accuracy.png
+          git commit -m "Add accuracy plot [skip ci]" || echo "No changes to commit"
+          git push origin main

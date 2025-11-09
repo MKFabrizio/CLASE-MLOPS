@@ -9,12 +9,14 @@ from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import accuracy_score, classification_report, mean_absolute_error, mean_squared_error, confusion_matrix
 from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 import re
 import pickle
 
 DATA_PATH = Path(__file__).resolve().parent / "data" / "base_encuestados_v2.csv"
-df = pd.read_csv(DATA_PATH)     
+df = pd.read_csv(DATA_PATH)  
 
 df = df[['Comentarios','NPS']].dropna().copy()
 df['Comentarios'] = df['Comentarios'].apply(lambda x: x.lower())
@@ -110,3 +112,18 @@ print("\nEvaluation results:\n", metrics_output)
 
 with open('metrics.txt', 'w', encoding='utf-8') as outfile:
     outfile.write(metrics_output)
+
+#Chart to compare accuracy for each class
+acc_per_class = []
+for i, label in enumerate(label_names):
+    idx = np.where(y_test_labels == i)
+    acc_class = np.mean(y_preds_labels[idx] == y_test_labels[idx])
+    acc_per_class.append(acc_class)
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x=label_names, y=acc_per_class, palette='viridis')
+plt.title('Accuracy per Class')
+plt.ylabel('Accuracy')
+plt.xlabel('Class')
+plt.xticks(rotation=45)
+plt.savefig('accuracy.png')
