@@ -9,6 +9,8 @@ from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import accuracy_score, classification_report, mean_absolute_error, mean_squared_error, confusion_matrix
 from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 import re
 import pickle
@@ -121,8 +123,6 @@ for i, label in enumerate(label_names):
     acc_class = np.mean(y_preds_labels[idx] == y_test_labels[idx])
     acc_per_class.append(acc_class)
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 plt.figure(figsize=(10, 6))
 sns.barplot(x=label_names, y=acc_per_class, palette='viridis')
 plt.title('Accuracy per Class')
