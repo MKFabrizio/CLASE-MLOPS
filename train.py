@@ -14,7 +14,8 @@ import re
 import pickle
 
 DATA_PATH = Path(__file__).resolve().parent / "data" / "base_encuestados_v2.csv"
-df = pd.read_csv(DATA_PATH)     
+#df = pd.read_csv(DATA_PATH)   
+df = pd.read_csv(DATA_PATH).head(1000)
 
 df = df[['Comentarios','NPS']].dropna().copy()
 df['Comentarios'] = df['Comentarios'].apply(lambda x: x.lower())
@@ -95,6 +96,33 @@ conf_mat = confusion_matrix(y_test_labels, y_preds_labels)
 label_names = list(le.classes_)
 
 class_report = classification_report(y_test_labels, y_preds_labels, target_names=label_names, zero_division=0)
+
+# --- Gráfico de accuracy por categoría ---
+import matplotlib.pyplot as plt
+
+# Calcular accuracy individual por clase
+# (TP / total reales en esa clase)
+diag = np.diag(conf_mat)
+total = conf_mat.sum(axis=1)
+accuracy_per_class = diag / total
+
+# Crear gráfico
+plt.figure(figsize=(8, 5))
+bars = plt.bar(label_names, accuracy_per_class, color=["#d62828", "#f4a261", "#2a9d8f"])
+plt.title("Comparación de Accuracy por Categoría", fontsize=14, fontweight="bold")
+plt.xlabel("Categorías", fontsize=12)
+plt.ylabel("Accuracy", fontsize=12)
+plt.ylim(0, 1.1)
+
+# Mostrar valores sobre cada barra
+for bar, acc in zip(bars, accuracy_per_class):
+    plt.text(bar.get_x() + bar.get_width()/2, acc + 0.03, f"{acc:.2f}",
+             ha='center', va='bottom', fontsize=11, fontweight='bold')
+
+plt.tight_layout()
+plt.savefig("plot.png")  # se usa por el workflow de CML
+plt.close()
+
 
 metrics_text = []
 metrics_text.append(f"Accuracy = {acc:.4f}")
