@@ -96,6 +96,37 @@ label_names = list(le.classes_)
 
 class_report = classification_report(y_test_labels, y_preds_labels, target_names=label_names, zero_division=0)
 
+import matplotlib.pyplot as plt
+
+# --- Extraer métricas por clase ---
+from sklearn.metrics import precision_recall_fscore_support
+
+# label_names ya existe
+precision, recall, f1, support = precision_recall_fscore_support(y_test_labels, y_preds_labels, labels=range(len(label_names)))
+
+# Calcular accuracy por clase
+acc_per_class = []
+for i, lbl in enumerate(label_names):
+    correct = np.sum((y_preds_labels == y_test_labels) & (y_test_labels == i))
+    total = np.sum(y_test_labels == i)
+    acc_class = correct / total if total > 0 else 0
+    acc_per_class.append(acc_class)
+
+# --- Graficar ---
+plt.figure(figsize=(6, 4))
+bars = plt.bar(label_names, acc_per_class, color=['#0078D4', '#742774', '#FFB900'])
+plt.title("Accuracy por Categoría (NPS Labels)")
+plt.ylabel("Accuracy")
+plt.xlabel("Categorías")
+plt.ylim(0, 1)
+plt.grid(axis="y", linestyle="--", alpha=0.6)
+plt.tight_layout()
+plt.savefig("plot.png", dpi=120)
+plt.close()
+
+print("✅ Gráfico guardado en plot.png")
+
+
 metrics_text = []
 metrics_text.append(f"Accuracy = {acc:.4f}")
 metrics_text.append(f"Mean Absolute Error = {mae_val}")
